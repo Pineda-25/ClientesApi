@@ -11,8 +11,7 @@ Web API RESTful robusta y escalable desarrollada con **ASP.NET Core (.NET 10)**,
 - [Base de Datos](#base-de-datos)
 - [Configuracion y Puesta en Marcha](#configuracion-y-puesta-en-marcha)
 - [Catalogo de Endpoints](#catalogo-de-endpoints)
-- [Guia y Evidencia de Pruebas](#guia-y-evidencia-de-pruebas)
-- [Autor](#autor)
+- [Guia y Ejemplos de Pruebas](#guia-y-ejemplos-de-pruebas)
 
 ---
 
@@ -55,8 +54,6 @@ ClientesApi/
 │   ├── Cliente.cs                   # Entidad Cliente (tabla clientes)
 │   ├── Productos.cs                 # Entidad Productos (tabla productos)
 │   └── Usuario.cs                   # Entidad Usuario (tabla Usuario)
-├── docs/
-│   └── screenshots/                 # Capturas de evidencia de pruebas
 ├── appsettings.json                 # Cadena de conexion y configuracion JWT
 └── Program.cs                       # Pipeline, inyeccion de dependencias y middlewares
 ```
@@ -165,29 +162,31 @@ La API iniciara en `https://localhost:7281` (o en el puerto asignado en tu `laun
 
 ---
 
-## Guia y Evidencia de Pruebas
+## Guia y Ejemplos de Pruebas
 
-A continuacion se detalla el ciclo completo de validacion y pruebas de seguridad realizadas en la API.
+A continuacion se detallan los ejemplos paso a paso del ciclo de validacion y pruebas de seguridad en la API.
 
 ### Paso 1: Intento de acceso sin autorizacion
-Se realiza una consulta inicial sin adjuntar token de seguridad:
-- **Peticion:** `GET https://localhost:7281/api/clientes`
-- **Resultado:** `401 Unauthorized` (Acceso denegado correctamente por el middleware de seguridad).
+Se realiza una consulta a la ruta protegida sin enviar token:
+- **Metodo:** `GET`
+- **URL:** `https://localhost:7281/api/clientes`
+- **Respuesta esperada:** `401 Sin autorizacion (Unauthorized)`
 
 ---
 
 ### Paso 2: Registro de nuevo usuario
-Se da de alta el usuario con sus credenciales:
-- **Peticion:** `POST https://localhost:7281/api/auth/registrar`
+Se crea el usuario con su contraseña cifrada:
+- **Metodo:** `POST`
+- **URL:** `https://localhost:7281/api/auth/registrar`
 - **Headers:** `Content-Type: application/json`
-- **Body:**
+- **Body (JSON):**
 ```json
 {
   "username": "junior.pineda",
   "password": "clave123"
 }
 ```
-- **Resultado:** `200 OK`
+- **Respuesta esperada:** `200 OK`
 ```json
 {
   "mensaje": "Usuario registrado correctamente "
@@ -196,18 +195,19 @@ Se da de alta el usuario con sus credenciales:
 
 ---
 
-### Paso 3: Inicio de sesion (Login) y obtencion de JWT
-El usuario se autentica para obtener su token con firma criptografica:
-- **Peticion:** `POST https://localhost:7281/api/auth/login`
+### Paso 3: Inicio de sesion (Login) y obtencion del Token JWT
+El usuario se autentica para obtener el token:
+- **Metodo:** `POST`
+- **URL:** `https://localhost:7281/api/auth/login`
 - **Headers:** `Content-Type: application/json`
-- **Body:**
+- **Body (JSON):**
 ```json
 {
   "username": "junior.pineda",
   "password": "clave123"
 }
 ```
-- **Resultado:** `200 OK`
+- **Respuesta esperada:** `200 OK`
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -218,10 +218,12 @@ El usuario se autentica para obtener su token con firma criptografica:
 ---
 
 ### Paso 4: Consulta autenticada con Bearer Token
-Utilizando el token obtenido, se realiza la consulta a los recursos protegidos:
-- **Peticion:** `GET https://localhost:7281/api/clientes`
-- **Headers:** `Authorization: Bearer <TOKEN_OBTENIDO>`
-- **Resultado:** `200 OK` (Retorna la coleccion completa de clientes).
+Se accede al recurso protegido pasando el token generado en los Headers:
+- **Metodo:** `GET`
+- **URL:** `https://localhost:7281/api/clientes`
+- **Headers:**
+  - `Authorization: Bearer <TOKEN_JWT_DEL_PASO_3>`
+- **Respuesta esperada:** `200 OK`
 ```json
 [
   {
@@ -236,12 +238,10 @@ Utilizando el token obtenido, se realiza la consulta a los recursos protegidos:
 ]
 ```
 
-![Pruebas de Autenticacion JWT](docs/screenshots/test_autenticacion_jwt.png)
-
 ---
 
 ### Paso 5: Control de roles y eliminacion administrativa (Admin)
-Para operaciones criticas como la eliminacion de un cliente, se requiere rol de **Admin**.
+La eliminacion de clientes requiere permisos de rol `Admin`.
 
 1. Asignar rol de administrador en SQL Server:
 ```sql
@@ -251,11 +251,11 @@ WHERE username = 'junior.pineda';
 GO
 ```
 
-2. Volver a iniciar sesion para generar un nuevo token con el claim de rol `Admin`.
-3. Ejecutar la eliminacion del cliente:
-- **Peticion:** `DELETE https://localhost:7281/api/clientes/1`
-- **Headers:** `Authorization: Bearer <TOKEN_ADMIN>`
-- **Resultado:** `204 No Content` (Eliminacion procesada exitosamente).
-
-![Pruebas de Rol Admin](docs/screenshots/test_roles_admin.png)
+2. Volver a hacer login (`POST /api/auth/login`) para generar un nuevo token con el rol `Admin`.
+3. Ejecutar la eliminacion enviando el nuevo token:
+- **Metodo:** `DELETE`
+- **URL:** `https://localhost:7281/api/clientes/1`
+- **Headers:**
+  - `Authorization: Bearer <TOKEN_ADMIN>`
+- **Respuesta esperada:** `204 No Content` (Eliminacion ejecutada correctamente)
 
