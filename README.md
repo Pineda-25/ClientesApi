@@ -68,7 +68,7 @@ ClientesApi/
 El sistema se conecta a SQL Server mediante la base de datos `DemoClientes`. Las tablas principales son:
 
 ```sql
--- 1. Tabla de Usuarios
+--Tabla de Usuarios
 CREATE TABLE Usuario (
     id INT IDENTITY(1,1) PRIMARY KEY,
     username NVARCHAR(50) NOT NULL UNIQUE,
@@ -76,7 +76,7 @@ CREATE TABLE Usuario (
     rol NVARCHAR(30) NOT NULL DEFAULT 'Usuario'
 );
 
--- 2. Tabla de Clientes
+--Tabla de Clientes
 CREATE TABLE clientes (
     id INT IDENTITY(1,1) PRIMARY KEY,
     apellidos NVARCHAR(70) NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE clientes (
     direccion NVARCHAR(150) NOT NULL
 );
 
--- 3. Tabla de Productos
+--Tabla de Productos
 CREATE TABLE productos (
     id INT IDENTITY(1,1) PRIMARY KEY,
     nombre NVARCHAR(100) NOT NULL,
