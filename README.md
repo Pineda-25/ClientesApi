@@ -259,9 +259,3 @@ GO
 
 ![Pruebas de Rol Admin](docs/screenshots/test_roles_admin.png)
 
----
-
-## Autor
-
-- **Desarrollador:** Junior Pineda ([@Pineda-25](https://github.com/Pineda-25))
-- **Correo:** juniorpineda2511@gmail.com
