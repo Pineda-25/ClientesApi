@@ -164,98 +164,70 @@ La API iniciara en `https://localhost:7281` (o en el puerto asignado en tu `laun
 
 ## Guia y Ejemplos de Pruebas
 
-A continuacion se detallan los ejemplos paso a paso del ciclo de validacion y pruebas de seguridad en la API.
+Registro detallado de pruebas realizadas para validar el flujo completo de autenticacion, autorizacion y operaciones restringidas:
 
-### Paso 1: Intento de acceso sin autorizacion
-Se realiza una consulta a la ruta protegida sin enviar token:
-- **Metodo:** `GET`
-- **URL:** `https://localhost:7281/api/clientes`
-- **Respuesta esperada:** `401 Sin autorizacion (Unauthorized)`
+```text
+*** Test de Autenticacion y Acceso a Clientes ***
 
----
+GET - https://localhost:7281/api/clientes
+Resultado: 401 Sin autorizacion
 
-### Paso 2: Registro de nuevo usuario
-Se crea el usuario con su contraseña cifrada:
-- **Metodo:** `POST`
-- **URL:** `https://localhost:7281/api/auth/registrar`
-- **Headers:** `Content-Type: application/json`
-- **Body (JSON):**
-```json
+--------------------------------------------------
+
+POST - https://localhost:7281/api/auth/registrar
+Body (JSON):
 {
-  "username": "junior.pineda",
-  "password": "clave123"
+    "username": "junior.pineda",
+    "password": "clave123"
 }
-```
-- **Respuesta esperada:** `200 OK`
-```json
+Resultado: { "mensaje": "Usuario registrado correctamente " }
+
+--------------------------------------------------
+
+POST - https://localhost:7281/api/auth/login
+Body (JSON):
 {
-  "mensaje": "Usuario registrado correctamente "
+    "username": "junior.pineda",
+    "password": "clave123"
 }
-```
-
----
-
-### Paso 3: Inicio de sesion (Login) y obtencion del Token JWT
-El usuario se autentica para obtener el token:
-- **Metodo:** `POST`
-- **URL:** `https://localhost:7281/api/auth/login`
-- **Headers:** `Content-Type: application/json`
-- **Body (JSON):**
-```json
+Resultado:
 {
-  "username": "junior.pineda",
-  "password": "clave123"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidW5pcXVlX25hbWUiOiJqdW5pb3IucGluZWRhIiwicm9sZSI6IlVzdWFyaW8iLCJqdGkiOiJmMWRlNDVhMi0yZjRhLTRlY2EtOTljNC0zYmQ1NTY1MTQ0OTkiLCJleHAiOjE3NjEyMjAyMDEsImlzcyI6IkNMaWVudGVzQXBpIiwiYXVkIjoiQ2xpZW50ZXNBcGlVc3VhcmlvcyJ9...",
+    "expira": "2026-10-23T15:10:01.8988164Z"
 }
-```
-- **Respuesta esperada:** `200 OK`
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expira": "2026-10-23T15:10:01.8988164Z"
-}
-```
 
----
+--------------------------------------------------
 
-### Paso 4: Consulta autenticada con Bearer Token
-Se accede al recurso protegido pasando el token generado en los Headers:
-- **Metodo:** `GET`
-- **URL:** `https://localhost:7281/api/clientes`
-- **Headers:**
-  - `Authorization: Bearer <TOKEN_JWT_DEL_PASO_3>`
-- **Respuesta esperada:** `200 OK`
-```json
+GET - https://localhost:7281/api/clientes
+Authorization - Bearer Token -> Pegar el token generado en el paso anterior
+Resultado: 200 OK
 [
-  {
-    "id": 1,
-    "apellidos": "Torres Peña",
-    "nombres": "María",
-    "telefono": "956111222",
-    "correo": "maria@gmail.com",
-    "dni": "11221122",
-    "direccion": "Av. Principal 123"
-  }
+    {
+        "id": 1,
+        "apellidos": "Torres Peña",
+        "nombres": "María",
+        "telefono": "956111222",
+        "correo": "maria@gmail.com",
+        "dni": "11221122",
+        "direccion": "Av. Principal 123"
+    }
 ]
 ```
 
 ---
 
-### Paso 5: Control de roles y eliminacion administrativa (Admin)
-La eliminacion de clientes requiere permisos de rol `Admin`.
+```text
+*** Test de Control de Roles (Admin) y Eliminacion ***
 
-1. Asignar rol de administrador en SQL Server:
-```sql
-UPDATE Usuario 
-SET rol = 'Admin' 
-WHERE username = 'junior.pineda';
+1. Asignar rol "Admin" al usuario en base de datos:
+UPDATE Usuario SET rol = 'Admin' WHERE username = 'junior.pineda'
 GO
+
+2. Iniciar sesion nuevamente para obtener el token con el claim Admin:
+POST - https://localhost:7281/api/auth/login
+
+3. Ejecutar eliminacion protegida:
+DEL - https://localhost:7281/api/clientes/1
+Authorization - Bearer Token -> Pegar el token generado con rol Admin
+Resultado: 204 No Content
 ```
-
-2. Volver a hacer login (`POST /api/auth/login`) para generar un nuevo token con el rol `Admin`.
-3. Ejecutar la eliminacion enviando el nuevo token:
-- **Metodo:** `DELETE`
-- **URL:** `https://localhost:7281/api/clientes/1`
-- **Headers:**
-  - `Authorization: Bearer <TOKEN_ADMIN>`
-- **Respuesta esperada:** `204 No Content` (Eliminacion ejecutada correctamente)
-
