@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ClientesApi.Controllers
 {
 
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ClientesController : ControllerBase
@@ -25,10 +25,32 @@ namespace ClientesApi.Controllers
         //IENumerable   : define un set de datos (coleccion)
         //ActionResul   : valor a obtner (coleccion definida en el modelo
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Cliente>>> Listar()
+        public async Task<ActionResult<IEnumerable<Cliente>>> Listar([FromQuery] string? buscar)
         {
-            var clientes = await _context.Clientes.AsNoTracking().ToListAsync();
-            return Ok(clientes);
+            //algortmo basio para listar
+            // var clientes = await _context.Clientes.AsNoTracking().ToListAsync();
+            //return Ok(clientes);
+
+            //Algoritmo que permite listar o aplicar filtro
+            var consulta = _context.Clientes.AsNoTracking();
+
+            //si la varible 
+            if(!string.IsNullOrWhiteSpace(buscar))
+            {
+                var texto = buscar.Trim();
+                consulta = consulta.Where( c =>
+                c.Apellidos.Contains(texto) ||
+                c.Nombres.Contains(texto) ||
+                c.Dni.Contains(texto)
+                    );
+            }
+
+            var lista = await consulta.OrderBy(c => c.Apellidos).
+                ThenBy(c => c.Nombres).
+                Take(200)
+                .ToListAsync();
+
+            return Ok(lista);
         }
 
         //Get : api/clientes/1 -> Busca clientes por su id
@@ -113,7 +135,7 @@ namespace ClientesApi.Controllers
         }
 
         //DELETE: api/clientes/1 -> eliminar
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Eliminar(int id)
         {
