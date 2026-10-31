@@ -1,4 +1,4 @@
-﻿using ClientesApi.Models;  //Modelo (Definicion tabla)
+using ClientesApi.Models;  //Modelo (Definicion tabla)
 using Microsoft.EntityFrameworkCore; //Acceder DB
 
 namespace ClientesApi.Data
@@ -16,5 +16,6 @@ namespace ClientesApi.Data
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Productos> Productos { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Proveedor> Proveedores { get; set; }
     }
 }
